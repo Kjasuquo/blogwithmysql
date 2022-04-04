@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi"
+	_ "github.com/go-sql-driver/mysql"
+	"http/db_client"
 	"http/myBlog"
 	"net/http"
 	"time"
@@ -10,6 +12,9 @@ import (
 
 //Main is where my program runs
 func main() {
+	//Initializing my DB
+	db_client.CreateAndOpen()
+
 	//chi is an external router package imported, and it serves as my router
 	router := chi.NewRouter()
 
