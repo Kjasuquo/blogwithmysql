@@ -2,10 +2,12 @@ package myBlog
 
 import (
 	"github.com/go-chi/chi"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -22,7 +24,14 @@ func TestApplication_Indexhandle(t *testing.T) {
 	//indexhandler(resp, req)
 
 	resp, err := http.DefaultClient.Do(req)
-	log.Println(resp)
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected %v: got %v", http.StatusOK, resp.StatusCode)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	if !strings.Contains(string(body), "Edit</a></button>") {
+		//t.Errorf()
+	}
+	log.Println(resp.Body)
 }
 
 func TestApplication_PostContenthandler(t *testing.T) {
