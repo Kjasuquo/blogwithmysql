@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"http/db_client"
 	"net/http"
+	"strings"
 )
 
 //Error handling
@@ -25,6 +26,7 @@ func Register(router *chi.Mux) {
 	router.Get("/update/{Id}", updateByIdhandler)
 	router.Post("/update/{Id}", postupdateByIdhandler)
 	router.Get("/del/{Id}", deleteByIdhandler)
+	router.Get("/readmore/{Id}", readMore)
 
 }
 
@@ -38,9 +40,35 @@ func indexhandler(w http.ResponseWriter, r *http.Request) {
 	t, e := template.ParseFiles("templat/index.html")
 	Error(e)
 
+	var f db_client.Data
+	var y string
+	var count int
+	var g []db_client.Data
+	for _, v := range db_client.DataStructure {
+		text := strings.Split(v.Content, " ")
+		for i := 0; i < len(text); i++ {
+			count++
+			if count == 100 {
+				y += "..."
+				break
+			}
+			y += text[i] + " "
+		}
+		f.Id = v.Id
+		f.Title = v.Title
+		f.Content = y
+		f.Status = v.Status
+
+		g = append(g, f)
+		y = ""
+		count = 0
+	}
+
 	//This writes whatever is in the DataStructure database to the html file
-	e = t.Execute(w, db_client.DataStructure)
-	Error(e)
+	e = t.Execute(w, g)
+	if e != nil {
+		fmt.Println(e)
+	}
 
 	db_client.DataStructure = nil
 }
@@ -85,7 +113,10 @@ func postContenthandler(w http.ResponseWriter, r *http.Request) {
 //To get the content on a page when Edit is clicked
 func updateByIdhandler(w http.ResponseWriter, r *http.Request) {
 
-	r.ParseForm()
+	e := r.ParseForm()
+	if e != nil {
+		fmt.Println(e)
+	}
 
 	ID := chi.URLParam(r, "Id")
 
@@ -124,4 +155,16 @@ func deleteByIdhandler(w http.ResponseWriter, r *http.Request) {
 
 	//redirect your page back to the index/home page when done (on a click)
 	http.Redirect(w, r, "/", 302)
+}
+
+func readMore(w http.ResponseWriter, r *http.Request) {
+	ID := chi.URLParam(r, "Id")
+
+	t, e := template.ParseFiles("templat/readmore.html")
+	Error(e)
+
+	//Calls or writes the item inside that database in the html file/template where it is called
+	e = t.Execute(w, db_client.EditDb(ID))
+	Error(e)
+
 }
